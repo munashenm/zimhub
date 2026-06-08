@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SOLD
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PAYNOW
+  ECOCASH
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          UserRole  @default(BUYER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sellerProfile SellerProfile?
+  products      Product[]
+  orders        Order[]        @relation("BuyerOrders")
+  offers        Offer[]        @relation("BuyerOffers")
+  reviews       Review[]
+  cartItems     CartItem[]
+}
+
+model SellerProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  businessName       String
+  businessDescription String?
+  location           String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  rejectionReason    String?
+  totalSales         Int                @default(0)
+  rating             Float              @default(0)
+  reviewCount        Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commissions  Commission[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  createdAt   DateTime  @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String
+  price       Float
+  currency    String        @default("USD")
+  condition   String        @default("New")
+  images      Json          @default("[]")
+  stock       Int           @default(1)
+  status      ProductStatus @default(PENDING_APPROVAL)
+  rejectionReason String?
+  sellerId    String
+  categoryId  String
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  approvedAt  DateTime?
+
+  seller     User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category   Category    @relation(fields: [categoryId], references: [id])
+  offers     Offer[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  cartItems  CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Offer {
+  id        String      @id @default(cuid())
+  productId String
+  buyerId   String
+  amount    Float
+  message   String?
+  status    OfferStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  expiresAt DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  buyerId         String
+  status          OrderStatus   @default(PENDING_PAYMENT)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  subtotal        Float
+  commission      Float         @default(0)
+  total           Float
+  currency        String        @default("USD")
+  shippingAddress String?
+  shippingCity    String?
+  shippingPhone   String?
+  notes           String?
+  paymentReference String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  paidAt          DateTime?
+  deliveredAt     DateTime?
+
+  buyer      User         @relation("BuyerOrders", fields: [buyerId], references: [id])
+  items      OrderItem[]
+  commissionRecord Commission?
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  sellerId  String
+  title     String
+  price     Float
+  quantity  Int    @default(1)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Commission {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  sellerProfileId String
+  saleAmount      Float
+  commissionRate  Float
+  commissionAmount Float
+  sellerPayout    Float
+  currency        String   @default("USD")
+  createdAt       DateTime @default(now())
+
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  buyerId   String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, buyerId])
+}
