@@ -1,6 +1,14 @@
-# Railway builds on Linux. A package-lock.json generated on Windows omits the
-# Linux native bindings for @tailwindcss/oxide / lightningcss (npm bug #4828),
-# which makes `npm ci` fail with "Cannot find native binding".
-# Force a clean, platform-correct install instead.
+[variables]
+NPM_CONFIG_PRODUCTION = "false"
+
 [phases.install]
-cmds = ["rm -f package-lock.json", "npm install"]
+cmds = [
+  "rm -rf node_modules package-lock.json",
+  "npm install --include=dev"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"

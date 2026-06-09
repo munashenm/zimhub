@@ -36,6 +36,9 @@ yarn-error.log*
 .env
 .env*.local
 
+# lockfile (generated on Windows breaks Linux native bindings on Railway)
+package-lock.json
+
 # vercel
 .vercel
 
