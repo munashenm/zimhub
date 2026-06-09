@@ -25,6 +25,7 @@ function RegisterForm() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -35,6 +36,12 @@ function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms & Conditions and Privacy Policy to register.");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/auth/register", {
@@ -124,7 +131,40 @@ function RegisterForm() {
               </>
             )}
 
-            <Button type="submit" className="w-full" loading={loading}>
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                required
+              />
+              <span className="text-sm text-gray-600 leading-relaxed">
+                I agree to ZimHub&apos;s{" "}
+                <Link href="/terms" className="font-medium text-brand-600 hover:underline" target="_blank">
+                  Terms & Conditions
+                </Link>
+                ,{" "}
+                <Link href="/privacy" className="font-medium text-brand-600 hover:underline" target="_blank">
+                  Privacy Policy
+                </Link>
+                ,{" "}
+                <Link href="/refund-policy" className="font-medium text-brand-600 hover:underline" target="_blank">
+                  Refund Policy
+                </Link>
+                , and{" "}
+                <Link
+                  href={form.role === "SELLER" ? "/seller-terms" : "/buyer-terms"}
+                  className="font-medium text-brand-600 hover:underline"
+                  target="_blank"
+                >
+                  {form.role === "SELLER" ? "Seller Terms" : "Buyer Terms"}
+                </Link>
+                .
+              </span>
+            </label>
+
+            <Button type="submit" className="w-full" loading={loading} disabled={!agreedToTerms}>
               {form.role === "SELLER" ? "Register as Seller" : "Create Account"}
             </Button>
           </form>

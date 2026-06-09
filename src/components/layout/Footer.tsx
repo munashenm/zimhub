@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/utils";
+import { LEGAL_LINKS } from "@/lib/legal-links";
 import { Logo } from "./Logo";
 
 export function Footer() {
@@ -22,7 +23,7 @@ export function Footer() {
       </div>
 
       <div className="container-app py-10">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-sm text-gray-500">
@@ -57,9 +58,20 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-bold text-gray-900">Help</h3>
             <ul className="space-y-2">
               <li><Link href="/contact" className="text-sm text-gray-500 hover:text-brand-600">Contact & Support</Link></li>
-              <li><Link href="/terms" className="text-sm text-gray-500 hover:text-brand-600">Terms & Conditions</Link></li>
-              <li><Link href="/privacy" className="text-sm text-gray-500 hover:text-brand-600">Privacy Policy</Link></li>
               <li><Link href="/about" className="text-sm text-gray-500 hover:text-brand-600">About Us</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-bold text-gray-900">Legal</h3>
+            <ul className="space-y-2">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-500 hover:text-brand-600">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
