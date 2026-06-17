@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getApprovedProducts } from "@/lib/products";
+import { resolveCategorySlug } from "@/lib/category-routes";
 import { ProductCard } from "@/components/products/ProductCard";
 import { CategorySidebar } from "@/components/layout/CategorySidebar";
 import { ProductSectionHeader } from "@/components/home/ProductSectionHeader";
@@ -10,24 +11,31 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug?: string[] }>;
 }) {
   const { slug } = await params;
-  const category = await prisma.category.findUnique({ where: { slug } });
+  const categorySlug = resolveCategorySlug(slug);
+  if (!categorySlug) return { title: "Category" };
+
+  const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
   return { title: category?.name || "Category" };
 }
 
 export default async function CategoryPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug?: string[] }>;
 }) {
   const { slug } = await params;
-  const category = await prisma.category.findUnique({ where: { slug } });
+  const categorySlug = resolveCategorySlug(slug);
+
+  if (!categorySlug) notFound();
+
+  const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
 
   if (!category) notFound();
 
-  const { products, total } = await getApprovedProducts({ categorySlug: slug });
+  const { products, total } = await getApprovedProducts({ categorySlug });
 
   return (
     <div className="container-app py-4 sm:py-6">
