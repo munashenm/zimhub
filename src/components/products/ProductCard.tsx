@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPriceParts, parseImages, cn } from "@/lib/utils";
+import { productImage } from "@/lib/images";
 import { AddToCartButton } from "./AddToCartButton";
 
 interface ProductCardProps {
@@ -51,7 +52,7 @@ export function ProductCard({
       <Link href={`/product/${product.slug}`} className="relative block">
         <div className="relative aspect-square overflow-hidden bg-gray-50">
           <Image
-            src={productImages[0] || "https://placehold.co/400x400?text=No+Image"}
+            src={productImage(productImages[0])}
             alt={product.title}
             fill
             className="object-contain p-2 transition-transform group-hover:scale-105"

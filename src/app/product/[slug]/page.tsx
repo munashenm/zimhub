@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getProductBySlug } from "@/lib/products";
 import { formatPriceParts, parseImages } from "@/lib/utils";
+import { productImage } from "@/lib/images";
 import { SellerBadge } from "@/components/ui/SellerBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductActions } from "@/components/products/ProductActions";
@@ -72,7 +73,7 @@ export default async function ProductPage({
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="relative aspect-square bg-gray-50">
             <Image
-              src={productImages[0] || "https://placehold.co/600x600?text=No+Image"}
+              src={productImage(productImages[0])}
               alt={product.title}
               fill
               className="object-contain p-4"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CategorySidebar } from "@/components/layout/CategorySidebar";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { TrustPanel } from "@/components/home/TrustPanel";
@@ -6,13 +7,14 @@ import { PromoTabs } from "@/components/home/PromoTabs";
 import { ProductSectionHeader } from "@/components/home/ProductSectionHeader";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getApprovedProducts } from "@/lib/products";
+import { POSTERS } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { products } = await getApprovedProducts({ limit: 12 });
+  const { products } = await getApprovedProducts({ limit: 18 });
   const dropShopProducts = products.slice(0, 6);
-  const latestProducts = products.slice(0, 8);
+  const latestProducts = products.slice(0, 12);
 
   return (
     <div className="container-app py-4 sm:py-6">
@@ -22,13 +24,11 @@ export default async function HomePage() {
         <div className="min-w-0 flex-1">
           <PromoTabs />
 
-          {/* Hero + Trust panel */}
           <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
             <HeroCarousel />
             <TrustPanel />
           </div>
 
-          {/* Drop & Shop section */}
           <section className="mt-8">
             <ProductSectionHeader
               title="Drop & Shop"
@@ -51,23 +51,33 @@ export default async function HomePage() {
             )}
           </section>
 
-          {/* Featured banner */}
           <section className="mt-8 overflow-hidden rounded-lg">
-            <div className="relative bg-gradient-to-r from-brand-700 to-brand-900 px-6 py-8 sm:px-10 sm:py-10">
-              <h2 className="text-xl font-bold text-white sm:text-2xl">
-                Tough looks good on you
-              </h2>
-              <p className="mt-1 text-sm text-white/70">Secondhand smartphones & electronics</p>
-              <Link
-                href="/category/phones"
-                className="mt-4 inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
-              >
-                Shop phones →
-              </Link>
+            <div className="relative min-h-[160px] px-6 py-8 sm:min-h-[180px] sm:px-10 sm:py-10">
+              <Image
+                src={POSTERS.phones}
+                alt="Smartphones and electronics on ZimHub"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 900px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-900/90 via-brand-800/75 to-brand-700/40" />
+              <div className="relative">
+                <h2 className="text-xl font-bold text-white sm:text-2xl">
+                  Tough looks good on you
+                </h2>
+                <p className="mt-1 text-sm text-white/70">
+                  Phones &amp; electronics at current Zimbabwe market prices
+                </p>
+                <Link
+                  href="/category/phones"
+                  className="mt-4 inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+                >
+                  Shop phones →
+                </Link>
+              </div>
             </div>
           </section>
 
-          {/* Latest listings */}
           <section className="mt-8">
             <ProductSectionHeader title="Latest Listings" href="/search" />
             {latestProducts.length > 0 ? (
@@ -81,20 +91,44 @@ export default async function HomePage() {
             )}
           </section>
 
-          {/* Weekend specials promo row */}
           <section className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
-              { title: "Midweek Deals", desc: "Save big every Wednesday", href: "/search?q=deals", color: "bg-brand-600" },
-              { title: "Flash Friday", desc: "Weekend specials", href: "/search?q=flash", color: "bg-brand-700" },
-              { title: "All Buy Now", desc: "Instant checkout items", href: "/search", color: "bg-brand-800" },
+              {
+                title: "Midweek Deals",
+                desc: "Save big every Wednesday",
+                href: "/search?q=deals",
+                image: POSTERS.marketplace,
+              },
+              {
+                title: "Flash Friday",
+                desc: "Weekend specials",
+                href: "/search?q=flash",
+                image: POSTERS.payments,
+              },
+              {
+                title: "All Buy Now",
+                desc: "Instant checkout items",
+                href: "/search",
+                image: POSTERS.sell,
+              },
             ].map((promo) => (
               <Link
                 key={promo.title}
                 href={promo.href}
-                className={`${promo.color} rounded-lg px-5 py-6 text-white transition-opacity hover:opacity-90`}
+                className="relative overflow-hidden rounded-lg px-5 py-6 text-white transition-opacity hover:opacity-95"
               >
-                <h3 className="font-bold">{promo.title}</h3>
-                <p className="mt-1 text-sm text-white/70">{promo.desc}</p>
+                <Image
+                  src={promo.image}
+                  alt={promo.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-brand-900/70" />
+                <div className="relative">
+                  <h3 className="font-bold">{promo.title}</h3>
+                  <p className="mt-1 text-sm text-white/70">{promo.desc}</p>
+                </div>
               </Link>
             ))}
           </section>
