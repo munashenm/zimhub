@@ -31,7 +31,7 @@ export function TrustPanel() {
           <Link
             key={f.title}
             href={f.href}
-            className={`flex items-start gap-3 px-4 py-4 hover:bg-gray-50 ${
+            className={`flex items-start gap-3 px-4 py-4 transition-colors duration-200 hover:bg-gray-50 ${
               i < FEATURES.length - 1 ? "border-b border-gray-100" : ""
             }`}
           >
