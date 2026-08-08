@@ -41,7 +41,7 @@ export default function OpenGraphImage() {
               maxWidth: 900,
             }}
           >
-            Zimbabwe's trusted online marketplace
+            {"Zimbabwe's trusted online marketplace"}
           </div>
           <div style={{ fontSize: 28, opacity: 0.9, maxWidth: 820 }}>
             Buy & sell safely with verified sellers · EcoCash · Paynow · Nationwide
