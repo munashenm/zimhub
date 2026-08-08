@@ -1,8 +1,14 @@
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
 import Link from "next/link";
 import { RELATED_LEGAL } from "@/lib/legal-links";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Seller Terms" };
+export const metadata = buildMetadata({
+  title: "Seller Terms",
+  description:
+    "Seller terms for listing and selling on ZimHub — reach buyers across Zimbabwe.",
+  path: "/seller-terms",
+});
 
 export default function SellerTermsPage() {
   return (

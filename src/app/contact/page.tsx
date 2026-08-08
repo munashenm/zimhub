@@ -1,9 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { whatsappUrl } from "@/lib/utils";
 import { MessageCircle, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Contact & Support" };
+export const metadata: Metadata = buildMetadata({
+  title: "Contact & Support — ZimHub Zimbabwe",
+  description:
+    "Contact ZimHub support in Zimbabwe via WhatsApp, email, or phone. Get help with orders, seller verification, and marketplace questions.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (
@@ -11,7 +18,8 @@ export default function ContactPage() {
       <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-bold text-gray-900">Contact & Support</h1>
         <p className="mt-2 text-gray-600">
-          Need help with an order or have a question? We&apos;re here for you.
+          Need help with an order or have a question about shopping or selling in Zimbabwe?
+          We&apos;re here for you.
         </p>
 
         <div className="mt-10 space-y-6">

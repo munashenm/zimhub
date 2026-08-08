@@ -1,8 +1,14 @@
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
 import Link from "next/link";
 import { RELATED_LEGAL } from "@/lib/legal-links";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Terms & Conditions" };
+export const metadata = buildMetadata({
+  title: "Terms & Conditions",
+  description:
+    "Read ZimHub Terms & Conditions for buying and selling on Zimbabwe's online marketplace.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

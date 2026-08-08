@@ -1,7 +1,13 @@
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
 import { RELATED_LEGAL } from "@/lib/legal-links";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Refund Policy" };
+export const metadata = buildMetadata({
+  title: "Refund Policy",
+  description:
+    "ZimHub refund and returns policy for buyers and sellers on Zimbabwe's online marketplace.",
+  path: "/refund-policy",
+});
 
 export default function RefundPolicyPage() {
   return (
