@@ -27,8 +27,9 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 max-w-xs text-sm text-gray-500">
-              Zimbabwe&apos;s safe and simple marketplace. Buy and sell with verified
-              sellers, EcoCash, Paynow, and buyer protection.
+              Zimbabwe&apos;s safe and simple marketplace. Buy and sell nationwide with
+              verified sellers, EcoCash, Paynow, and buyer protection — from Harare to
+              Bulawayo and beyond.
             </p>
           </div>
 

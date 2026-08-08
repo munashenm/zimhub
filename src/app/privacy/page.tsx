@@ -1,7 +1,14 @@
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
 import { RELATED_LEGAL } from "@/lib/legal-links";
 
-export const metadata = { title: "Privacy Policy" };
+import { buildMetadata } from "@/lib/seo";
+
+export const metadata = buildMetadata({
+  title: "Privacy Policy",
+  description:
+    "How ZimHub collects, uses, and protects your personal information when you shop or sell in Zimbabwe.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

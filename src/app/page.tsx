@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CategorySidebar } from "@/components/layout/CategorySidebar";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { TrustPanel } from "@/components/home/TrustPanel";
@@ -6,8 +7,26 @@ import { PromoTabs } from "@/components/home/PromoTabs";
 import { ProductSectionHeader } from "@/components/home/ProductSectionHeader";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getApprovedProducts } from "@/lib/products";
+import { CATEGORIES } from "@/lib/utils";
+import { buildMetadata, SITE_TAGLINE } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = buildMetadata({
+  title: undefined,
+  path: "/",
+  description:
+    "ZimHub is Zimbabwe's trusted online marketplace. Shop phones, electronics, fashion, farming supplies and more from verified sellers. Pay with EcoCash & Paynow. Delivered across Harare, Bulawayo, Mutare, Gweru and nationwide.",
+  keywords: [
+    "ZimHub",
+    "online shopping Zimbabwe",
+    "Zimbabwe marketplace",
+    "buy online Harare",
+    "EcoCash shop",
+    "Paynow Zimbabwe",
+    "sell online Zimbabwe",
+  ],
+});
 
 export default async function HomePage() {
   const { products } = await getApprovedProducts({ limit: 12 });
@@ -27,6 +46,28 @@ export default async function HomePage() {
             <HeroCarousel />
             <TrustPanel />
           </div>
+
+          {/* Primary SEO heading — one H1 for the homepage */}
+          <section className="mt-6">
+            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
+              ZimHub — Zimbabwe&apos;s trusted online marketplace
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600 sm:text-base">
+              {SITE_TAGLINE}. Browse verified listings, pay with EcoCash or Paynow,
+              and get delivery from Harare to Bulawayo and across Zimbabwe.
+            </p>
+            <nav aria-label="Popular categories" className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/category/${cat.slug}`}
+                  className="text-brand-700 hover:underline"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </nav>
+          </section>
 
           {/* Drop & Shop section */}
           <section className="mt-8">
@@ -57,7 +98,9 @@ export default async function HomePage() {
               <h2 className="text-xl font-bold text-white sm:text-2xl">
                 Tough looks good on you
               </h2>
-              <p className="mt-1 text-sm text-white/70">Secondhand smartphones & electronics</p>
+              <p className="mt-1 text-sm text-white/70">
+                Secondhand smartphones &amp; electronics for sale in Zimbabwe
+              </p>
               <Link
                 href="/category/phones"
                 className="mt-4 inline-flex items-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50"
@@ -97,6 +140,30 @@ export default async function HomePage() {
                 <p className="mt-1 text-sm text-white/70">{promo.desc}</p>
               </Link>
             ))}
+          </section>
+
+          <section className="mt-10 rounded-lg bg-gray-50 px-4 py-8 sm:px-8">
+            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+              Why Zimbabwe shops on ZimHub
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-600">
+              ZimHub connects buyers and sellers across Zimbabwe with verified seller
+              badges, buyer protection, tracked delivery, and local payment options
+              including EcoCash and Paynow. Whether you are shopping for phones in
+              Harare, farming supplies in Masvingo, or fashion in Bulawayo — buy and
+              sell with confidence.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3 text-sm">
+              <Link href="/about" className="font-semibold text-brand-700 hover:underline">
+                About ZimHub
+              </Link>
+              <Link href="/register?seller=true" className="font-semibold text-brand-700 hover:underline">
+                Sell on ZimHub
+              </Link>
+              <Link href="/contact" className="font-semibold text-brand-700 hover:underline">
+                Contact support
+              </Link>
+            </div>
           </section>
         </div>
       </div>

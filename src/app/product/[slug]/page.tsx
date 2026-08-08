@@ -1,12 +1,20 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getProductBySlug } from "@/lib/products";
 import { formatPriceParts, parseImages } from "@/lib/utils";
 import { SellerBadge } from "@/components/ui/SellerBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductActions } from "@/components/products/ProductActions";
 import { ReviewSection } from "@/components/products/ReviewSection";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  breadcrumbJsonLd,
+  buildMetadata,
+  productJsonLd,
+  truncateMeta,
+} from "@/lib/seo";
 import { Shield, Truck, BadgeCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -15,10 +23,39 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  return { title: product?.title || "Product" };
+
+  if (!product || product.status !== "APPROVED") {
+    return buildMetadata({
+      title: "Product not available",
+      path: `/product/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  const images = parseImages(product.images);
+  const location = product.seller.sellerProfile?.location;
+  const description = truncateMeta(
+    `${product.title} for sale in Zimbabwe${location ? ` (${location})` : ""}. ${product.condition}. ${product.description}`
+  );
+
+  return buildMetadata({
+    title: `${product.title} — Buy in Zimbabwe`,
+    description,
+    path: `/product/${product.slug}`,
+    image: images[0] || undefined,
+    type: "product",
+    keywords: [
+      product.title,
+      product.category.name,
+      "buy online Zimbabwe",
+      "ZimHub",
+      product.condition,
+      location || "Zimbabwe",
+    ],
+  });
 }
 
 export default async function ProductPage({
@@ -53,18 +90,52 @@ export default async function ProductPage({
   const comparePrice = product.price * 1.15;
   const compareParts = formatPriceParts(comparePrice, product.currency);
   const sellerName = product.seller.sellerProfile?.businessName || product.seller.name;
+  const primaryImage =
+    productImages[0] || "https://placehold.co/600x600?text=No+Image";
 
   return (
     <div className="container-app py-6">
+      <JsonLd
+        data={[
+          productJsonLd({
+            name: product.title,
+            description: product.description,
+            slug: product.slug,
+            image: primaryImage,
+            price: product.price,
+            currency: product.currency,
+            condition: product.condition,
+            availability: product.stock > 0 ? "InStock" : "OutOfStock",
+            brand: sellerName,
+            ratingValue: avgRating || undefined,
+            reviewCount: product.reviews.length || undefined,
+            category: product.category.name,
+          }),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: product.category.name, path: `/category/${product.category.slug}` },
+            { name: product.title, path: `/product/${product.slug}` },
+          ]),
+        ]}
+      />
+
       {/* Breadcrumb */}
-      <nav className="mb-4 text-xs text-gray-400">
-        <Link href="/" className="hover:text-brand-600">Home</Link>
-        {" / "}
-        <Link href={`/category/${product.category.slug}`} className="hover:text-brand-600">
-          {product.category.name}
-        </Link>
-        {" / "}
-        <span className="text-gray-600">{product.title}</span>
+      <nav aria-label="Breadcrumb" className="mb-4 text-xs text-gray-400">
+        <ol className="flex flex-wrap items-center gap-1">
+          <li>
+            <Link href="/" className="hover:text-brand-600">Home</Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link href={`/category/${product.category.slug}`} className="hover:text-brand-600">
+              {product.category.name}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li className="text-gray-600" aria-current="page">
+            {product.title}
+          </li>
+        </ol>
       </nav>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -72,8 +143,8 @@ export default async function ProductPage({
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="relative aspect-square bg-gray-50">
             <Image
-              src={productImages[0] || "https://placehold.co/600x600?text=No+Image"}
-              alt={product.title}
+              src={primaryImage}
+              alt={`${product.title} for sale in Zimbabwe on ZimHub`}
               fill
               className="object-contain p-4"
               priority
@@ -156,6 +227,10 @@ export default async function ProductPage({
       <div className="mt-6 rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
         <h2 className="text-sm font-bold text-gray-900">Description</h2>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">{product.description}</p>
+        <p className="mt-4 text-xs text-gray-400">
+          Available on ZimHub — Zimbabwe&apos;s online marketplace. Pay with EcoCash,
+          Paynow, or cash on delivery.
+        </p>
       </div>
 
       <ReviewSection
