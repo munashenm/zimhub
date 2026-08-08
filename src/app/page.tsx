@@ -36,7 +36,7 @@ export default async function HomePage() {
               href="/search"
             />
             {dropShopProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+              <div className="stagger-children grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
                 {dropShopProducts.map((product, i) => (
                   <ProductCard
                     key={product.id}
@@ -71,7 +71,7 @@ export default async function HomePage() {
           <section className="mt-8">
             <ProductSectionHeader title="Latest Listings" href="/search" />
             {latestProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="stagger-children grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {latestProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -91,7 +91,7 @@ export default async function HomePage() {
               <Link
                 key={promo.title}
                 href={promo.href}
-                className={`${promo.color} rounded-lg px-5 py-6 text-white transition-opacity hover:opacity-90`}
+                className={`${promo.color} rounded-lg px-5 py-6 text-white transition-all duration-300 hover:-translate-y-0.5 hover:opacity-95`}
               >
                 <h3 className="font-bold">{promo.title}</h3>
                 <p className="mt-1 text-sm text-white/70">{promo.desc}</p>

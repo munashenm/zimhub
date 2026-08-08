@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { useToast } from "@/components/ui/Toast";
 import { formatPrice } from "@/lib/utils";
 import { ShoppingCart, Tag, Zap } from "lucide-react";
 
@@ -19,11 +20,11 @@ interface ProductActionsProps {
 export function ProductActions({ productId, price, sellerId }: ProductActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [showOffer, setShowOffer] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
   const [offerMessage, setOfferMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   const isOwnProduct = session?.user?.id === sellerId;
 
@@ -33,15 +34,21 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId }),
-    });
-    setLoading(false);
-    if (res.ok) {
-      setMessage("Added to cart!");
-      router.push("/cart");
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
+      if (res.ok) {
+        toast("Added to cart");
+      } else {
+        toast("Could not add to cart. Try again.", "error");
+      }
+    } catch {
+      toast("Could not add to cart. Try again.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,22 +67,29 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/offers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId,
-        amount: parseFloat(offerAmount),
-        message: offerMessage,
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (res.ok) {
-      setMessage("Offer submitted! The seller will respond soon.");
-      setShowOffer(false);
-    } else {
-      setMessage(data.error || "Failed to submit offer");
+    try {
+      const res = await fetch("/api/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          amount: parseFloat(offerAmount),
+          message: offerMessage,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast("Offer submitted — the seller will respond soon");
+        setShowOffer(false);
+        setOfferAmount("");
+        setOfferMessage("");
+      } else {
+        toast(data.error || "Failed to submit offer", "error");
+      }
+    } catch {
+      toast("Failed to submit offer", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,11 +103,11 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
 
   return (
     <div className="mt-8 space-y-3">
-      {message && (
-        <div className="rounded-lg bg-brand-50 p-3 text-sm text-brand-800">{message}</div>
-      )}
-
-      <Button onClick={handleBuyNow} size="lg" className="w-full">
+      <Button
+        onClick={handleBuyNow}
+        size="lg"
+        className="w-full transition-transform active:scale-[0.99]"
+      >
         <Zap className="h-5 w-5" />
         Buy Now — {formatPrice(price)}
       </Button>
@@ -114,7 +128,10 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
       </div>
 
       {showOffer && (
-        <form onSubmit={handleOffer} className="rounded-xl border border-gray-200 p-4 space-y-3">
+        <form
+          onSubmit={handleOffer}
+          className="animate-fade-up space-y-3 rounded-xl border border-gray-200 p-4"
+        >
           <Input
             label={`Your Offer (must be less than ${formatPrice(price)})`}
             type="number"
@@ -140,7 +157,10 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
 
       {!session && (
         <p className="text-center text-sm text-gray-500">
-          <Link href="/login" className="font-semibold text-brand-600">Sign in</Link> to buy or make an offer
+          <Link href="/login" className="font-semibold text-brand-600">
+            Sign in
+          </Link>{" "}
+          to buy or make an offer
         </p>
       )}
     </div>

@@ -44,7 +44,7 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md",
+        "group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
         className
       )}
     >
@@ -54,7 +54,7 @@ export function ProductCard({
             src={productImages[0] || "https://placehold.co/400x400?text=No+Image"}
             alt={product.title}
             fill
-            className="object-contain p-2 transition-transform group-hover:scale-105"
+            className="object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
           />
           {hotSelling && (
@@ -72,7 +72,7 @@ export function ProductCard({
 
       <div className="flex flex-1 flex-col p-3">
         <Link href={`/product/${product.slug}`}>
-          <h3 className="line-clamp-2 text-sm leading-snug text-gray-800 group-hover:text-brand-600">
+          <h3 className="line-clamp-2 text-sm leading-snug text-gray-800 transition-colors group-hover:text-brand-600">
             {product.title}
           </h3>
         </Link>
