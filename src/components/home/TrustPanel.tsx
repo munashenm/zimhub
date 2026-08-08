@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { Truck, BadgeCheck, Shield } from "lucide-react";
 import Link from "next/link";
+import { POSTERS } from "@/lib/images";
 
 const FEATURES = [
   {
@@ -25,13 +27,28 @@ const FEATURES = [
 export function TrustPanel() {
   return (
     <div className="flex flex-col gap-3">
-      <div className="hidden rounded-lg bg-brand-600 sm:block sm:h-24 lg:h-32" />
+      <Link
+        href="/about"
+        className="relative hidden overflow-hidden rounded-lg sm:block sm:h-24 lg:h-32"
+      >
+        <Image
+          src={POSTERS.delivery}
+          alt="Tracked deliveries across Zimbabwe"
+          fill
+          className="object-cover"
+          sizes="220px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-900/80 to-brand-700/30" />
+        <p className="absolute bottom-3 left-3 right-3 text-sm font-bold text-white">
+          Nationwide delivery
+        </p>
+      </Link>
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         {FEATURES.map((f, i) => (
           <Link
             key={f.title}
             href={f.href}
-            className={`flex items-start gap-3 px-4 py-4 hover:bg-gray-50 ${
+            className={`flex items-start gap-3 px-4 py-4 transition-colors duration-200 hover:bg-gray-50 ${
               i < FEATURES.length - 1 ? "border-b border-gray-100" : ""
             }`}
           >

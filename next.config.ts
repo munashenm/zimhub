@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
     // Serve remote images directly until we add libvips/sharp to the container.
     unoptimized: true,
     remotePatterns: [
-      { protocol: "https", hostname: "placehold.co" },
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
     ],

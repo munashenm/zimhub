@@ -25,6 +25,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+After pulling catalog/image updates, re-seed so listings refresh:
+
+```bash
+npm run db:seed
+```
+
 ### Demo Accounts (password: `password123`)
 
 | Role   | Email                 |

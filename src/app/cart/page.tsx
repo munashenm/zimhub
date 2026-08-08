@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, parseImages } from "@/lib/utils";
+import { productImage } from "@/lib/images";
 import { Button } from "@/components/ui/Button";
 import { Trash2 } from "lucide-react";
 
@@ -78,7 +79,7 @@ export default function CartPage() {
               >
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                   <Image
-                    src={parseImages(item.product.images)[0] || "https://placehold.co/80x80"}
+                    src={productImage(parseImages(item.product.images)[0])}
                     alt={item.product.title}
                     fill
                     className="object-cover"
