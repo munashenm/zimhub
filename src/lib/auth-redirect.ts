@@ -8,9 +8,21 @@ export function isSafeCallbackUrl(url: string | null | undefined): url is string
   return true;
 }
 
+function callbackAllowedForRole(role: string, callbackUrl: string): boolean {
+  if (callbackUrl.startsWith("/admin") && role !== "ADMIN") return false;
+  if (callbackUrl.startsWith("/seller") && role !== "SELLER" && role !== "ADMIN") {
+    return false;
+  }
+  return true;
+}
+
 /** Where to send the user after a successful sign-in. */
 export function postLoginPath(role: string, callbackUrl?: string | null): string {
-  if (isSafeCallbackUrl(callbackUrl) && callbackUrl !== "/") {
+  if (
+    isSafeCallbackUrl(callbackUrl) &&
+    callbackUrl !== "/" &&
+    callbackAllowedForRole(role, callbackUrl)
+  ) {
     return callbackUrl;
   }
   if (role === "ADMIN") return "/admin";

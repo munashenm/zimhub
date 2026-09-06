@@ -16,3 +16,29 @@ export function ensureAuthEnv() {
 export function getAuthSecret() {
   return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
 }
+
+export function getAuthPublicUrl() {
+  return process.env.NEXTAUTH_URL || process.env.AUTH_URL || "";
+}
+
+export function useSecureAuthCookies() {
+  return getAuthPublicUrl().startsWith("https://");
+}
+
+export function cookieDomainForAuthUrl(url: string, override?: string): string | undefined {
+  if (override) return override;
+  try {
+    const host = new URL(url).hostname;
+    if (host === "zimhub.co.zw" || host.endsWith(".zimhub.co.zw")) {
+      return ".zimhub.co.zw";
+    }
+  } catch {
+    // Local or invalid NEXTAUTH_URL — host-only cookies.
+  }
+  return undefined;
+}
+
+/** Share the session cookie across apex and www in production. */
+export function getAuthCookieDomain(): string | undefined {
+  return cookieDomainForAuthUrl(getAuthPublicUrl(), process.env.NEXTAUTH_COOKIE_DOMAIN);
+}

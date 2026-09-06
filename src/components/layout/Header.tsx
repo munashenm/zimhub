@@ -125,7 +125,7 @@ export function Header() {
                   <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                     {status === "authenticated" && session ? (
                       <>
-                        <Link
+                        <a
                           href={dashboardLink}
                           className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
                           onClick={() => setAccountOpen(false)}
@@ -138,7 +138,7 @@ export function Header() {
                             <User className="h-4 w-4" />
                           )}
                           {dashboardLabel}
-                        </Link>
+                        </a>
                         <button
                           onClick={handleSignOut}
                           className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-50"
@@ -207,9 +207,9 @@ export function Header() {
               <nav className="flex flex-col gap-1">
                 {session ? (
                   <>
-                    <Link href={dashboardLink} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
+                    <a href={dashboardLink} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
                       {dashboardLabel}
-                    </Link>
+                    </a>
                     <Link href="/cart" className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
                       Cart{itemCount > 0 ? ` (${itemCount})` : ""}
                     </Link>

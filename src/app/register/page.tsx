@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { Input } from "@/components/ui/Input";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/Button";
 import { postLoginPath } from "@/lib/auth-redirect";
 
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const isSeller = searchParams.get("seller") === "true";
 
@@ -67,7 +66,7 @@ function RegisterForm() {
     setLoading(false);
 
     if (signInResult?.error) {
-      router.push(form.role === "SELLER" ? "/login?role=seller" : "/login");
+      window.location.assign(form.role === "SELLER" ? "/login?role=seller" : "/login");
       return;
     }
 
@@ -76,8 +75,7 @@ function RegisterForm() {
       await new Promise((resolve) => setTimeout(resolve, 200));
       session = await getSession();
     }
-    router.push(postLoginPath(session?.user?.role || data.role || form.role));
-    router.refresh();
+    window.location.assign(postLoginPath(session?.user?.role || data.role || form.role));
   };
 
   return (

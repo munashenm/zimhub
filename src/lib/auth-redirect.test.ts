@@ -20,6 +20,13 @@ describe("postLoginPath", () => {
     assert.equal(isSafeCallbackUrl("//evil.example"), false);
     assert.equal(postLoginPath("BUYER", "//evil.example"), "/dashboard");
   });
+
+  it("does not send buyers to seller or admin callbacks", () => {
+    assert.equal(postLoginPath("BUYER", "/seller"), "/dashboard");
+    assert.equal(postLoginPath("BUYER", "/admin"), "/dashboard");
+    assert.equal(postLoginPath("SELLER", "/admin"), "/seller");
+    assert.equal(postLoginPath("SELLER", "/seller"), "/seller");
+  });
 });
 
 describe("loginRoleMismatch", () => {

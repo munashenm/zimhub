@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { signIn, getSession, signOut } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { signIn, getSession, signOut, useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { loginRoleMismatch, postLoginPath } from "@/lib/auth-redirect";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: existingSession, status } = useSession();
   const callbackUrl = searchParams.get("callbackUrl") || "";
   const initialRole = searchParams.get("role") === "seller" ? "SELLER" : "BUYER";
   const [portal, setPortal] = useState<"BUYER" | "SELLER">(initialRole);
@@ -18,6 +18,11 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !existingSession?.user?.role) return;
+    window.location.replace(postLoginPath(existingSession.user.role, callbackUrl));
+  }, [status, existingSession, callbackUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +61,21 @@ function LoginForm() {
       return;
     }
 
-    router.push(postLoginPath(role, callbackUrl));
-    router.refresh();
+    window.location.assign(postLoginPath(role, callbackUrl));
   };
+
+  if (status === "authenticated" && existingSession?.user?.role) {
+    return (
+      <div className="container-app flex min-h-[70vh] items-center justify-center py-12">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-900">You&apos;re already signed in</h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Continuing to your {existingSession.user.role === "SELLER" ? "seller" : "account"} dashboard…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-app flex min-h-[70vh] items-center justify-center py-12">

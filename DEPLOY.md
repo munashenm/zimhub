@@ -112,7 +112,8 @@ In Railway → your service → **Variables**, add:
 |----------|-------|
 | `DATABASE_URL` | Pooled URL (port 6543, `?pgbouncer=true`) |
 | `DIRECT_URL` | Direct URL (port 5432) |
-| `NEXTAUTH_URL` | `https://www.zimhub.co.zw` |
+| `NEXTAUTH_URL` | Canonical public origin, e.g. `https://www.zimhub.co.zw` |
+| `NEXTAUTH_COOKIE_DOMAIN` | Optional. `.zimhub.co.zw` is set automatically when `NEXTAUTH_URL` is on that host |
 | `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
@@ -220,7 +221,7 @@ npm run dev
 |---------|-----|
 | `Can't reach database` on Railway | Ensure `DATABASE_URL` uses port **6543** with `?pgbouncer=true` |
 | Prisma `db push` fails | Use `DIRECT_URL` (port **5432**), not the pooled URL |
-| Login redirects fail | `NEXTAUTH_URL` must exactly match `https://www.zimhub.co.zw` |
+| Login redirects fail | Set `NEXTAUTH_URL` to the public origin. Session cookies are shared on `.zimhub.co.zw` so apex and www both work |
 | Custom domain stuck "unverified" | Set the Cloudflare record to **DNS only (grey cloud)** until SSL is issued |
 | Redirect loop after proxying | Set Cloudflare **SSL/TLS** to **Full (strict)** |
 | Images not loading | Supabase bucket must be **public**; `next.config.ts` allows `**.supabase.co` |
