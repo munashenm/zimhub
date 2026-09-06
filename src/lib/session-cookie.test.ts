@@ -34,4 +34,14 @@ describe("findSessionCookieName", () => {
   it("returns undefined when no session cookie is present", () => {
     assert.equal(findSessionCookieName(jar({ csrf: "x" })), undefined);
   });
+
+  it("reads a Secure cookie from the raw Cookie header", () => {
+    assert.equal(
+      findSessionCookieName(
+        jar({}),
+        "__Secure-next-auth.session-token=enc; Path=/"
+      ),
+      "__Secure-next-auth.session-token"
+    );
+  });
 });

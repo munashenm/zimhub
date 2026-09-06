@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
 
   if (!matched) return NextResponse.next();
 
-  const cookieName = findSessionCookieName(request.cookies);
+  const cookieName = findSessionCookieName(request.cookies, request.headers.get("cookie"));
   if (!cookieName) {
     return loginRedirect(request, pathname);
   }
