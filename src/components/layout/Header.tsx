@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Search,
   ShoppingCart,
@@ -21,13 +21,14 @@ import { CATEGORIES } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartProvider";
 
 export function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("");
   const router = useRouter();
+  const accountRef = useRef<HTMLDivElement>(null);
 
   const dashboardLink =
     session?.user.role === "ADMIN"
@@ -35,6 +36,30 @@ export function Header() {
       : session?.user.role === "SELLER"
         ? "/seller"
         : "/dashboard";
+
+  const dashboardLabel =
+    session?.user.role === "ADMIN"
+      ? "Admin dashboard"
+      : session?.user.role === "SELLER"
+        ? "Seller dashboard"
+        : "My dashboard";
+
+  const handleSignOut = () => {
+    setAccountOpen(false);
+    setMobileOpen(false);
+    void signOut({ callbackUrl: "/", redirect: true });
+  };
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [accountOpen]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,18 +109,20 @@ export function Header() {
             </form>
 
             <div className="ml-auto flex items-center gap-2 sm:gap-3">
-              <div className="relative hidden md:block">
+              <div className="relative hidden md:block" ref={accountRef}>
                 <button
                   onClick={() => setAccountOpen(!accountOpen)}
                   className="flex items-center gap-2 rounded-full border-2 border-brand-500 px-4 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50"
                 >
                   <User className="h-4 w-4" />
-                  {session ? session.user.name?.split(" ")[0] : "My account"}
+                  {status === "authenticated" && session
+                    ? session.user.name?.split(" ")[0]
+                    : "My account"}
                   <ChevronDown className="h-4 w-4" />
                 </button>
                 {accountOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                    {session ? (
+                  <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                    {status === "authenticated" && session ? (
                       <>
                         <Link
                           href={dashboardLink}
@@ -109,20 +136,23 @@ export function Header() {
                           ) : (
                             <User className="h-4 w-4" />
                           )}
-                          Dashboard
+                          {dashboardLabel}
                         </Link>
                         <button
-                          onClick={() => signOut({ callbackUrl: "/" })}
+                          onClick={handleSignOut}
                           className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-50"
                         >
                           <LogOut className="h-4 w-4" />
-                          Sign Out
+                          Sign out
                         </button>
                       </>
                     ) : (
                       <>
                         <Link href="/login" className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setAccountOpen(false)}>
-                          Log in
+                          Buyer login
+                        </Link>
+                        <Link href="/login?role=seller" className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setAccountOpen(false)}>
+                          Seller login
                         </Link>
                         <Link href="/register" className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setAccountOpen(false)}>
                           Register
@@ -177,19 +207,22 @@ export function Header() {
                 {session ? (
                   <>
                     <Link href={dashboardLink} className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
-                      Dashboard
+                      {dashboardLabel}
                     </Link>
                     <Link href="/cart" className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
                       Cart{itemCount > 0 ? ` (${itemCount})` : ""}
                     </Link>
-                    <button onClick={() => signOut({ callbackUrl: "/" })} className="rounded-lg px-3 py-2.5 text-left text-sm hover:bg-gray-100">
-                      Sign Out
+                    <button onClick={handleSignOut} className="rounded-lg px-3 py-2.5 text-left text-sm hover:bg-gray-100">
+                      Sign out
                     </button>
                   </>
                 ) : (
                   <>
                     <Link href="/login" className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
-                      Log in
+                      Buyer login
+                    </Link>
+                    <Link href="/login?role=seller" className="rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-gray-100" onClick={() => setMobileOpen(false)}>
+                      Seller login
                     </Link>
                     <Link href="/register" className="rounded-lg bg-brand-500 px-3 py-2.5 text-sm font-semibold text-white" onClick={() => setMobileOpen(false)}>
                       Register

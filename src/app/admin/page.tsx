@@ -57,23 +57,30 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState<"overview" | "products" | "sellers">("overview");
 
   const loadData = () => {
-    fetch("/api/admin").then((r) => r.json()).then(setData);
+    fetch("/api/admin")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.stats) setData(json);
+      });
     fetch("/api/products?status=PENDING_APPROVAL")
       .then((r) => r.json())
-      .then((d) => setPendingProducts(d.products || []));
+      .then((d) => setPendingProducts(Array.isArray(d.products) ? d.products : []));
+    fetch("/api/admin/sellers")
+      .then((r) => r.json())
+      .then((d) => setPendingSellers(Array.isArray(d) ? d : []));
   };
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
+    if (status === "unauthenticated") {
+      router.push("/login?role=seller&callbackUrl=/admin");
+      return;
+    }
     if (status === "authenticated") {
       if (session?.user?.role !== "ADMIN") {
-        router.push("/");
+        router.push(session?.user?.role === "SELLER" ? "/seller" : "/dashboard");
         return;
       }
       loadData();
-      fetch("/api/admin/sellers")
-        .then((r) => r.json())
-        .then(setPendingSellers);
     }
   }, [status, session, router]);
 
@@ -96,6 +103,7 @@ export default function AdminDashboard() {
       body: JSON.stringify({
         sellerProfileId,
         status: verified ? "VERIFIED" : "REJECTED",
+        rejectionReason: verified ? undefined : "Does not meet seller requirements",
       }),
     });
     loadData();
@@ -116,7 +124,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: "overview" as const, label: "Overview" },
     { id: "products" as const, label: `Products (${pendingProducts.length})` },
-    { id: "sellers" as const, label: "Seller Verification" },
+            { id: "sellers" as const, label: `Sellers (${pendingSellers.length})` },
   ];
 
   return (

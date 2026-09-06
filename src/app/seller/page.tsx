@@ -26,7 +26,7 @@ interface SellerData {
     rating: number;
     reviewCount: number;
     totalSales: number;
-    location: string | null;
+    rejectionReason?: string | null;
   };
   products: {
     id: string;
@@ -68,6 +68,7 @@ export default function SellerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [data, setData] = useState<SellerData | null>(null);
+  const [error, setError] = useState("");
   const [tab, setTab] = useState<"products" | "offers" | "orders" | "commissions" | "add">("products");
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
@@ -82,21 +83,39 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const loadData = () => {
-    fetch("/api/seller").then((r) => r.json()).then(setData);
+  const loadData = async () => {
+    const res = await fetch("/api/seller");
+    const json = await res.json();
+    if (!res.ok || !json?.profile) {
+      setError(json?.error || "Could not load seller dashboard");
+      setData(null);
+      return;
+    }
+    setError("");
+    setData(json);
   };
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
+    if (status === "unauthenticated") {
+      router.push("/login?role=seller&callbackUrl=/seller");
+      return;
+    }
     if (status === "authenticated") {
-      if (session?.user?.role !== "SELLER" && session?.user?.role !== "ADMIN") {
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin");
+        return;
+      }
+      if (session?.user?.role !== "SELLER") {
         router.push("/dashboard");
         return;
       }
-      loadData();
+      void loadData();
       fetch("/api/categories")
         .then((r) => r.json())
-        .then((cats: { id: string; name: string }[]) => setCategories(cats));
+        .then((cats: { id: string; name: string }[]) =>
+          setCategories(Array.isArray(cats) ? cats : [])
+        )
+        .catch(() => setCategories([]));
     }
   }, [status, session, router]);
 
@@ -150,9 +169,23 @@ export default function SellerDashboard() {
     loadData();
   };
 
-  if (!data) {
+  if (status === "loading" || (status === "authenticated" && !data && !error)) {
     return <div className="container-app py-16 text-center text-gray-500">Loading...</div>;
   }
+
+  if (error || !data) {
+    return (
+      <div className="container-app py-16 text-center">
+        <p className="text-gray-700">{error || "Could not load seller dashboard"}</p>
+        <Button className="mt-4" onClick={() => void loadData()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  const verified = data.profile.verificationStatus === "VERIFIED";
+  const rejected = data.profile.verificationStatus === "REJECTED";
 
   const tabs = [
     { id: "products" as const, label: "Products", icon: Package },
@@ -175,6 +208,33 @@ export default function SellerDashboard() {
           reviewCount={data.profile.reviewCount}
         />
       </div>
+
+      {!verified && (
+        <div
+          className={`mt-6 rounded-xl border p-4 text-sm ${
+            rejected
+              ? "border-red-200 bg-red-50 text-red-800"
+              : "border-amber-200 bg-amber-50 text-amber-900"
+          }`}
+        >
+          {rejected ? (
+            <>
+              <p className="font-semibold">Your seller account was not approved.</p>
+              <p className="mt-1">
+                {data.profile.rejectionReason || "Contact ZimHub support if you think this is a mistake."}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold">Waiting for admin verification</p>
+              <p className="mt-1">
+                You can sign in, but you cannot list products until a ZimHub admin verifies this
+                seller account.
+              </p>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-3">
         {[
@@ -301,6 +361,13 @@ export default function SellerDashboard() {
         )}
 
         {tab === "add" && (
+          !verified ? (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
+              {rejected
+                ? "This seller account cannot list products."
+                : "Listing is unlocked after an admin verifies your seller account."}
+            </div>
+          ) : (
           <form onSubmit={handleAddProduct} className="max-w-lg space-y-4">
             {message && (
               <div className="rounded-lg bg-brand-50 p-3 text-sm text-brand-800">{message}</div>
@@ -336,6 +403,7 @@ export default function SellerDashboard() {
             />
             <Button type="submit" loading={loading} disabled={!form.images.trim()}>Submit for Approval</Button>
           </form>
+          )
         )}
       </div>
     </div>

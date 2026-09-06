@@ -3,10 +3,11 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { postLoginPath } from "@/lib/auth-redirect";
 
 function RegisterForm() {
   const router = useRouter();
@@ -58,7 +59,7 @@ function RegisterForm() {
     }
 
     const signInResult = await signIn("credentials", {
-      email: form.email,
+      email: form.email.trim().toLowerCase(),
       password: form.password,
       redirect: false,
     });
@@ -66,11 +67,16 @@ function RegisterForm() {
     setLoading(false);
 
     if (signInResult?.error) {
-      router.push("/login");
+      router.push(form.role === "SELLER" ? "/login?role=seller" : "/login");
       return;
     }
 
-    router.push(form.role === "SELLER" ? "/seller" : "/dashboard");
+    let session = await getSession();
+    if (!session?.user) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      session = await getSession();
+    }
+    router.push(postLoginPath(session?.user?.role || data.role || form.role));
     router.refresh();
   };
 
@@ -83,7 +89,7 @@ function RegisterForm() {
           </h1>
           <p className="mt-1 text-sm text-gray-500">
             {isSeller
-              ? "Start selling on Zimbabwe's trusted marketplace"
+              ? "Your account will be reviewed by a ZimHub admin before you can list products."
               : "Join ZimHub to buy safely across Zimbabwe"}
           </p>
 

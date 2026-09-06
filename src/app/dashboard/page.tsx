@@ -31,12 +31,27 @@ export default function BuyerDashboard() {
   const [offers, setOffers] = useState<Offer[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-    if (status === "authenticated") {
-      fetch("/api/orders").then((r) => r.json()).then(setOrders);
-      fetch("/api/offers?type=sent").then((r) => r.json()).then(setOffers);
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/dashboard");
+      return;
     }
-  }, [status, router]);
+    if (status === "authenticated") {
+      if (session?.user?.role === "SELLER") {
+        router.push("/seller");
+        return;
+      }
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin");
+        return;
+      }
+      fetch("/api/orders")
+        .then((r) => r.json())
+        .then((d) => setOrders(Array.isArray(d) ? d : []));
+      fetch("/api/offers?type=sent")
+        .then((r) => r.json())
+        .then((d) => setOffers(Array.isArray(d) ? d : []));
+    }
+  }, [status, session, router]);
 
   if (status === "loading") {
     return <div className="container-app py-16 text-center text-gray-500">Loading...</div>;

@@ -2,9 +2,13 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { ensureAuthEnv, getAuthSecret } from "./auth-env";
+
+ensureAuthEnv();
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
+  secret: getAuthSecret(),
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -17,19 +21,18 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials?.email?.trim().toLowerCase();
+        const password = credentials?.password;
+        if (!email || !password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+          where: { email },
           include: { sellerProfile: true },
         });
 
         if (!user) return null;
 
-        const valid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
+        const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
         return {
@@ -50,7 +53,28 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.sellerProfileId = user.sellerProfileId;
         token.verificationStatus = user.verificationStatus;
+        token.verificationCheckedAt = Date.now();
       }
+
+      // Keep seller verification in sync after an admin approves/rejects.
+      const lastCheck = typeof token.verificationCheckedAt === "number" ? token.verificationCheckedAt : 0;
+      const shouldRefreshSeller =
+        token.role === "SELLER" && token.id && Date.now() - lastCheck > 15_000;
+
+      if (shouldRefreshSeller) {
+        try {
+          const profile = await prisma.sellerProfile.findUnique({
+            where: { userId: token.id as string },
+            select: { id: true, verificationStatus: true },
+          });
+          token.sellerProfileId = profile?.id ?? null;
+          token.verificationStatus = profile?.verificationStatus ?? null;
+          token.verificationCheckedAt = Date.now();
+        } catch {
+          // Session still works if the DB blip is temporary.
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -58,9 +82,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.sellerProfileId = token.sellerProfileId as string | null;
-        session.user.verificationStatus = token.verificationStatus as
-          | string
-          | null;
+        session.user.verificationStatus = token.verificationStatus as string | null;
       }
       return session;
     },

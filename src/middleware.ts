@@ -1,42 +1,62 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { ensureAuthEnv, getAuthSecret } from "@/lib/auth-env";
 
-const protectedRoutes: Record<string, string[]> = {
-  "/admin": ["ADMIN"],
-  "/seller": ["SELLER", "ADMIN"],
-  "/dashboard": ["BUYER", "SELLER", "ADMIN"],
-  "/cart": ["BUYER", "SELLER", "ADMIN"],
-  "/checkout": ["BUYER", "SELLER", "ADMIN"],
-};
+ensureAuthEnv();
+
+const protectedRoutes: { prefix: string; roles: string[] }[] = [
+  { prefix: "/admin", roles: ["ADMIN"] },
+  { prefix: "/seller", roles: ["SELLER", "ADMIN"] },
+  { prefix: "/dashboard", roles: ["BUYER", "SELLER", "ADMIN"] },
+  { prefix: "/cart", roles: ["BUYER", "SELLER", "ADMIN"] },
+  { prefix: "/checkout", roles: ["BUYER", "SELLER", "ADMIN"] },
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  const matchedRoute = Object.keys(protectedRoutes).find((route) =>
-    pathname.startsWith(route)
+  const matched = protectedRoutes.find(
+    (route) => pathname === route.prefix || pathname.startsWith(`${route.prefix}/`)
   );
 
-  if (!matchedRoute) return NextResponse.next();
+  if (!matched) return NextResponse.next();
 
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: getAuthSecret(),
   });
 
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
+    if (pathname.startsWith("/seller")) loginUrl.searchParams.set("role", "seller");
+    if (pathname.startsWith("/admin")) loginUrl.searchParams.set("role", "seller");
     return NextResponse.redirect(loginUrl);
   }
 
-  const allowedRoles = protectedRoutes[matchedRoute];
-  if (!allowedRoles.includes(token.role as string)) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (!matched.roles.includes(token.role as string)) {
+    if (token.role === "SELLER") {
+      return NextResponse.redirect(new URL("/seller", request.url));
+    }
+    if (token.role === "ADMIN") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/seller/:path*", "/dashboard/:path*", "/cart", "/checkout/:path*"],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/seller",
+    "/seller/:path*",
+    "/dashboard",
+    "/dashboard/:path*",
+    "/cart",
+    "/cart/:path*",
+    "/checkout",
+    "/checkout/:path*",
+  ],
 };
