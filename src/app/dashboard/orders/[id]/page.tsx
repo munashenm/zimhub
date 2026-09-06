@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { formatPrice, ORDER_STATUS_LABELS } from "@/lib/utils";
@@ -27,19 +27,17 @@ interface OrderDetail {
 
 function OrderDetailContent({ orderId }: { orderId: string }) {
   const { status: authStatus } = useSession();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const [order, setOrder] = useState<OrderDetail | null>(null);
 
   useEffect(() => {
-    if (authStatus === "unauthenticated") router.push("/login");
     if (authStatus === "authenticated") {
       fetch(`/api/orders/${orderId}`)
         .then((r) => r.json())
         .then(setOrder);
     }
-  }, [authStatus, router, orderId]);
+  }, [authStatus, orderId]);
 
   if (!order) {
     return <div className="container-app py-16 text-center text-gray-500">Loading...</div>;

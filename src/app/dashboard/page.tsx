@@ -31,26 +31,21 @@ export default function BuyerDashboard() {
   const [offers, setOffers] = useState<Offer[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/dashboard");
+    if (status !== "authenticated") return;
+    if (session?.user?.role === "SELLER") {
+      router.push("/seller");
       return;
     }
-    if (status === "authenticated") {
-      if (session?.user?.role === "SELLER") {
-        router.push("/seller");
-        return;
-      }
-      if (session?.user?.role === "ADMIN") {
-        router.push("/admin");
-        return;
-      }
-      fetch("/api/orders")
-        .then((r) => r.json())
-        .then((d) => setOrders(Array.isArray(d) ? d : []));
-      fetch("/api/offers?type=sent")
-        .then((r) => r.json())
-        .then((d) => setOffers(Array.isArray(d) ? d : []));
+    if (session?.user?.role === "ADMIN") {
+      router.push("/admin");
+      return;
     }
+    fetch("/api/orders")
+      .then((r) => r.json())
+      .then((d) => setOrders(Array.isArray(d) ? d : []));
+    fetch("/api/offers?type=sent")
+      .then((r) => r.json())
+      .then((d) => setOffers(Array.isArray(d) ? d : []));
   }, [status, session, router]);
 
   if (status === "loading") {

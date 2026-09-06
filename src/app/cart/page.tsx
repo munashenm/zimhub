@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, parseImages } from "@/lib/utils";
@@ -26,17 +25,12 @@ interface CartItem {
 
 export default function CartPage() {
   const { status } = useSession();
-  const router = useRouter();
   const { refresh } = useCart();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/cart");
-      return;
-    }
     if (status === "authenticated") {
       fetch("/api/cart")
         .then((r) => r.json())
@@ -45,7 +39,7 @@ export default function CartPage() {
         })
         .finally(() => setLoading(false));
     }
-  }, [status, router]);
+  }, [status]);
 
   const removeItem = async (productId: string) => {
     setUpdatingId(productId);

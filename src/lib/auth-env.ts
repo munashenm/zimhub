@@ -22,7 +22,26 @@ export function getAuthPublicUrl() {
 }
 
 export function useSecureAuthCookies() {
+  if (process.env.NODE_ENV === "production") return true;
   return getAuthPublicUrl().startsWith("https://");
+}
+
+/** Send zimhub.co.zw ↔ www.zimhub.co.zw to the host in NEXTAUTH_URL. */
+export function canonicalZimhubHost(
+  requestHost: string,
+  canonicalUrl: string
+): string | null {
+  let want: string;
+  try {
+    want = new URL(canonicalUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const got = requestHost.split(":")[0].toLowerCase();
+  if (!got || got === want) return null;
+  const isZimhub = (host: string) => host === "zimhub.co.zw" || host === "www.zimhub.co.zw";
+  if (!isZimhub(got) || !isZimhub(want)) return null;
+  return want;
 }
 
 export function cookieDomainForAuthUrl(url: string, override?: string): string | undefined {

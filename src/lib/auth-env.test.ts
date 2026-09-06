@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { cookieDomainForAuthUrl } from "./auth-env";
+import { canonicalZimhubHost, cookieDomainForAuthUrl } from "./auth-env";
 
 describe("cookieDomainForAuthUrl", () => {
   it("shares cookies across zimhub apex and www", () => {
@@ -17,6 +17,23 @@ describe("cookieDomainForAuthUrl", () => {
     assert.equal(
       cookieDomainForAuthUrl("https://www.zimhub.co.zw", ".example.com"),
       ".example.com"
+    );
+  });
+});
+
+describe("canonicalZimhubHost", () => {
+  it("sends apex to www when that is the public origin", () => {
+    assert.equal(
+      canonicalZimhubHost("zimhub.co.zw", "https://www.zimhub.co.zw"),
+      "www.zimhub.co.zw"
+    );
+  });
+
+  it("does not touch localhost or Railway preview hosts", () => {
+    assert.equal(canonicalZimhubHost("localhost:3000", "https://www.zimhub.co.zw"), null);
+    assert.equal(
+      canonicalZimhubHost("zimhub-production.up.railway.app", "https://www.zimhub.co.zw"),
+      null
     );
   });
 });

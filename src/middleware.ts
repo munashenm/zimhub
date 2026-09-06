@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { canonicalZimhubHost } from "@/lib/auth-env";
 import { findSessionCookieName } from "@/lib/session-cookie";
 
 const protectedRoutes: { prefix: string; roles: string[] }[] = [
@@ -12,18 +13,31 @@ const protectedRoutes: { prefix: string; roles: string[] }[] = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // These identifiers must appear in this file so Next.js inlines them for Edge.
+  const canonicalUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || "";
+  void process.env.NEXTAUTH_SECRET;
+  void process.env.AUTH_SECRET;
+
+  const wantHost = canonicalZimhubHost(request.headers.get("host") || "", canonicalUrl);
+  if (wantHost) {
+    const url = request.nextUrl.clone();
+    url.hostname = wantHost;
+    url.protocol = "https:";
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
   const matched = protectedRoutes.find(
     (route) => pathname === route.prefix || pathname.startsWith(`${route.prefix}/`)
   );
 
   if (!matched) return NextResponse.next();
 
-  // Never send people to /login from Edge. That is what bounced signed-in users
-  // (header showed their name) back to the login form. Node layouts already
-  // gate these routes with getServerSession, which matches the header session.
+  // Never send people to /login from Edge. Node layouts already gate these
+  // routes with getServerSession, which matches the header session.
   const cookieName = findSessionCookieName(request.cookies, request.headers.get("cookie"));
   const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
-  void process.env.NEXTAUTH_URL;
 
   if (!cookieName || !secret) return NextResponse.next();
 
@@ -51,16 +65,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/admin",
-    "/admin/:path*",
-    "/seller",
-    "/seller/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/cart",
-    "/cart/:path*",
-    "/checkout",
-    "/checkout/:path*",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt).*)"],
 };

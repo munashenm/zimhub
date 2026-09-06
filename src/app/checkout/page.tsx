@@ -27,11 +27,8 @@ function CheckoutForm() {
   const [cartTotal, setCartTotal] = useState(0);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/checkout");
-      return;
-    }
-    if (!productId && status === "authenticated") {
+    if (status !== "authenticated") return;
+    if (!productId) {
       fetch("/api/cart")
         .then((r) => r.json())
         .then((items) => {
@@ -43,7 +40,7 @@ function CheckoutForm() {
           setCartTotal(total);
         });
     }
-  }, [status, router, productId]);
+  }, [status, productId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

@@ -71,17 +71,12 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?role=seller&callbackUrl=/admin");
+    if (status !== "authenticated") return;
+    if (session?.user?.role !== "ADMIN") {
+      router.push(session?.user?.role === "SELLER" ? "/seller" : "/dashboard");
       return;
     }
-    if (status === "authenticated") {
-      if (session?.user?.role !== "ADMIN") {
-        router.push(session?.user?.role === "SELLER" ? "/seller" : "/dashboard");
-        return;
-      }
-      loadData();
-    }
+    loadData();
   }, [status, session, router]);
 
   const approveProduct = async (id: string, approved: boolean) => {

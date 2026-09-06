@@ -96,27 +96,22 @@ export default function SellerDashboard() {
   };
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?role=seller&callbackUrl=/seller");
+    if (status !== "authenticated") return;
+    if (session?.user?.role === "ADMIN") {
+      router.push("/admin");
       return;
     }
-    if (status === "authenticated") {
-      if (session?.user?.role === "ADMIN") {
-        router.push("/admin");
-        return;
-      }
-      if (session?.user?.role !== "SELLER") {
-        router.push("/dashboard");
-        return;
-      }
-      void loadData();
-      fetch("/api/categories")
-        .then((r) => r.json())
-        .then((cats: { id: string; name: string }[]) =>
-          setCategories(Array.isArray(cats) ? cats : [])
-        )
-        .catch(() => setCategories([]));
+    if (session?.user?.role !== "SELLER") {
+      router.push("/dashboard");
+      return;
     }
+    void loadData();
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((cats: { id: string; name: string }[]) =>
+        setCategories(Array.isArray(cats) ? cats : [])
+      )
+      .catch(() => setCategories([]));
   }, [status, session, router]);
 
   const handleAddProduct = async (e: React.FormEvent) => {
