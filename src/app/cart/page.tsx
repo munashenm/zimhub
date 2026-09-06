@@ -51,8 +51,8 @@ export default function CartPage() {
     setUpdatingId(productId);
     await fetch(`/api/cart?productId=${productId}`, { method: "DELETE" });
     setItems((prev) => prev.filter((i) => i.product.id !== productId));
-    await refresh();
     setUpdatingId(null);
+    await refresh();
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
@@ -77,9 +77,9 @@ export default function CartPage() {
       } else {
         setItems((prev) => prev.filter((i) => i.product.id !== productId));
       }
-      await refresh();
     }
     setUpdatingId(null);
+    await refresh();
   };
 
   const total = items.reduce(
@@ -133,22 +133,24 @@ export default function CartPage() {
                         type="button"
                         disabled={updatingId === item.product.id || item.quantity <= 1}
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                        className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
                         aria-label="Decrease quantity"
                       >
-                        <Minus className="h-3.5 w-3.5" />
+                        <Minus className="pointer-events-none h-3.5 w-3.5" />
                       </button>
-                      <span className="min-w-6 text-center text-sm font-medium">{item.quantity}</span>
+                      <span className="min-w-6 text-center text-sm font-medium" data-testid="cart-qty">
+                        {item.quantity}
+                      </span>
                       <button
                         type="button"
                         disabled={
                           updatingId === item.product.id || item.quantity >= item.product.stock
                         }
                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                        className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
                         aria-label="Increase quantity"
                       >
-                        <Plus className="h-3.5 w-3.5" />
+                        <Plus className="pointer-events-none h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -162,7 +164,7 @@ export default function CartPage() {
                   className="self-start rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                   aria-label="Remove from cart"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="pointer-events-none h-4 w-4" />
                 </button>
               </div>
             ))}
