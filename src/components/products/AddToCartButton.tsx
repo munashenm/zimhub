@@ -1,9 +1,10 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/components/cart/CartProvider";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -13,6 +14,8 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ productId, className = "" }: AddToCartButtonProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const { refresh } = useCart();
   const [loading, setLoading] = useState(false);
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -20,18 +23,21 @@ export function AddToCartButton({ productId, className = "" }: AddToCartButtonPr
     e.stopPropagation();
 
     if (!session) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
       return;
     }
 
     setLoading(true);
-    await fetch("/api/cart", {
+    const res = await fetch("/api/cart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId }),
     });
     setLoading(false);
-    router.push("/cart");
+    if (res.ok) {
+      await refresh();
+      router.push("/cart");
+    }
   };
 
   return (

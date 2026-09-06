@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { postLoginPath } from "@/lib/auth-redirect";
 
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const isSeller = searchParams.get("seller") === "true";
 
@@ -58,7 +58,7 @@ function RegisterForm() {
     }
 
     const signInResult = await signIn("credentials", {
-      email: form.email,
+      email: form.email.trim().toLowerCase(),
       password: form.password,
       redirect: false,
     });
@@ -66,12 +66,16 @@ function RegisterForm() {
     setLoading(false);
 
     if (signInResult?.error) {
-      router.push("/login");
+      window.location.assign(form.role === "SELLER" ? "/login?role=seller" : "/login");
       return;
     }
 
-    router.push(form.role === "SELLER" ? "/seller" : "/dashboard");
-    router.refresh();
+    let session = await getSession();
+    if (!session?.user) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      session = await getSession();
+    }
+    window.location.assign(postLoginPath(session?.user?.role || data.role || form.role));
   };
 
   return (
@@ -83,7 +87,7 @@ function RegisterForm() {
           </h1>
           <p className="mt-1 text-sm text-gray-500">
             {isSeller
-              ? "Start selling on Zimbabwe's trusted marketplace"
+              ? "Your account will be reviewed by a ZimHub admin before you can list products."
               : "Join ZimHub to buy safely across Zimbabwe"}
           </p>
 
@@ -114,7 +118,7 @@ function RegisterForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form id="register-form" onSubmit={handleSubmit} className="mt-6 space-y-4">
             {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
             )}

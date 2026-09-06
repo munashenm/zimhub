@@ -76,6 +76,23 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (session.user.role === "SELLER") {
+      const profile = await prisma.sellerProfile.findUnique({
+        where: { userId: session.user.id },
+      });
+      if (!profile || profile.verificationStatus !== "VERIFIED") {
+        return NextResponse.json(
+          {
+            error:
+              profile?.verificationStatus === "REJECTED"
+                ? "Your seller account was not approved. Contact support."
+                : "Your seller account must be verified by an admin before you can list products.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const body = await request.json();
     const data = productSchema.parse(body);
 

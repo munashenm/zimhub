@@ -6,8 +6,9 @@ WORKDIR /app
 # Prisma needs OpenSSL on slim images
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Copy prisma before npm install — postinstall runs `prisma generate` and needs schema.prisma
-COPY package.json ./
+# Copy prisma before npm install — postinstall runs `prisma generate` and needs schema.prisma.
+# .npmrc must be present so optional Tailwind oxide binaries are installed.
+COPY package.json package-lock.json .npmrc ./
 COPY prisma ./prisma
 RUN npm install --include=dev
 

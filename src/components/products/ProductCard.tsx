@@ -32,12 +32,12 @@ export function ProductCard({
   className,
 }: ProductCardProps) {
   const productImages = parseImages(product.images);
-  const comparePrice = discountPercent
-    ? product.price / (1 - discountPercent / 100)
-    : product.price * 1.15;
-  const discount = discountPercent ?? Math.round((1 - product.price / comparePrice) * 100);
+  const discount = discountPercent && discountPercent > 0 ? discountPercent : 0;
+  const comparePrice = discount > 0 ? product.price / (1 - discount / 100) : null;
   const priceParts = formatPriceParts(product.price, product.currency);
-  const compareParts = formatPriceParts(comparePrice, product.currency);
+  const compareParts = comparePrice
+    ? formatPriceParts(comparePrice, product.currency)
+    : null;
   const sellerName =
     product.seller?.sellerProfile?.businessName || product.seller?.name || "Seller";
 
@@ -93,7 +93,7 @@ export function ProductCard({
           <span className="text-xl font-bold text-gray-900">{priceParts.main}</span>
           <span className="text-sm font-bold text-gray-900">{priceParts.cents}</span>
         </div>
-        {discount > 0 && (
+        {discount > 0 && compareParts && (
           <div className="text-xs text-gray-400 line-through">
             {compareParts.symbol}
             {compareParts.main}

@@ -23,5 +23,6 @@ declare module "next-auth/jwt" {
     role: string;
     sellerProfileId: string | null;
     verificationStatus: string | null;
+    verificationCheckedAt?: number;
   }
 }

@@ -40,6 +40,13 @@ export async function GET() {
     prisma.sellerProfile.findUnique({ where: { userId: session.user.id } }),
   ]);
 
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Seller profile not found. Contact support." },
+      { status: 404 }
+    );
+  }
+
   return NextResponse.json({ products, offers, orders, commissions, profile });
 }
 

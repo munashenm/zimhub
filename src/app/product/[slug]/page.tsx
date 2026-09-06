@@ -50,8 +50,6 @@ export default async function ProductPage({
 
   const productImages = parseImages(product.images);
   const priceParts = formatPriceParts(product.price, product.currency);
-  const comparePrice = product.price * 1.15;
-  const compareParts = formatPriceParts(comparePrice, product.currency);
   const sellerName = product.seller.sellerProfile?.businessName || product.seller.name;
 
   return (
@@ -103,15 +101,11 @@ export default async function ProductPage({
             {avgRating > 0 && <StarRating rating={avgRating} showValue />}
           </div>
 
-          {/* Bob Shop price display */}
           <div className="mt-5 border-b border-gray-100 pb-5">
             <div className="flex items-baseline gap-1">
               <span className="text-sm font-medium text-gray-500">{priceParts.symbol}</span>
               <span className="text-3xl font-bold text-gray-900">{priceParts.main}</span>
               <span className="text-lg font-bold text-gray-900">{priceParts.cents}</span>
-            </div>
-            <div className="text-sm text-gray-400 line-through">
-              {compareParts.symbol}{compareParts.main}{compareParts.cents}
             </div>
           </div>
 
@@ -132,6 +126,7 @@ export default async function ProductPage({
 
           <ProductActions
             productId={product.id}
+            productSlug={product.slug}
             price={product.price}
             sellerId={product.seller.id}
           />

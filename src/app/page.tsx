@@ -3,6 +3,7 @@ import { CategorySidebar } from "@/components/layout/CategorySidebar";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { TrustPanel } from "@/components/home/TrustPanel";
 import { PromoTabs } from "@/components/home/PromoTabs";
+import { CategoryStrip } from "@/components/home/CategoryStrip";
 import { ProductSectionHeader } from "@/components/home/ProductSectionHeader";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getApprovedProducts } from "@/lib/products";
@@ -21,6 +22,7 @@ export default async function HomePage() {
 
         <div className="min-w-0 flex-1">
           <PromoTabs />
+          <CategoryStrip />
 
           {/* Hero + Trust panel */}
           <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
@@ -42,7 +44,6 @@ export default async function HomePage() {
                     key={product.id}
                     product={product}
                     hotSelling={i === 0}
-                    discountPercent={[11, 15, 30, 33, 21, 24][i % 6]}
                   />
                 ))}
               </div>
@@ -84,9 +85,9 @@ export default async function HomePage() {
           {/* Weekend specials promo row */}
           <section className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
-              { title: "Midweek Deals", desc: "Save big every Wednesday", href: "/search?q=deals", color: "bg-brand-600" },
-              { title: "Flash Friday", desc: "Weekend specials", href: "/search?q=flash", color: "bg-brand-700" },
-              { title: "All Buy Now", desc: "Instant checkout items", href: "/search", color: "bg-brand-800" },
+              { title: "Phones", desc: "New and used smartphones", href: "/category/phones", color: "bg-brand-600" },
+              { title: "Groceries", desc: "Everyday household staples", href: "/category/groceries", color: "bg-brand-700" },
+              { title: "All listings", desc: "Browse the full marketplace", href: "/search", color: "bg-brand-800" },
             ].map((promo) => (
               <Link
                 key={promo.title}

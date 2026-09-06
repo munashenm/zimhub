@@ -1,54 +1,65 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Smartphone,
-  Home,
-  Baby,
+  Laptop,
+  Cpu,
   Shirt,
-  Dumbbell,
-  Sparkles,
-  Gem,
+  Home,
   Car,
-  Briefcase,
-  Grid3X3,
+  Sprout,
+  ShoppingBasket,
+  Armchair,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
-import { CATEGORIES } from "@/lib/utils";
+import { CATEGORIES, cn } from "@/lib/utils";
+import { resolveCategorySlug } from "@/lib/category-routes";
 
-const SIDEBAR_CATEGORIES = [
-  { name: "Digital", slug: "phones", icon: Smartphone },
-  { name: "Home, Garden & Groceries", slug: "groceries", icon: Home },
-  { name: "Toys & Baby", slug: "fashion", icon: Baby },
-  { name: "Fashion & Jewellery", slug: "fashion", icon: Shirt },
-  { name: "Sports & Health", slug: "electronics", icon: Dumbbell },
-  { name: "Lifestyle", slug: "furniture", icon: Sparkles },
-  { name: "Collectables", slug: "electronics", icon: Gem },
-  { name: "Automotive", slug: "car-parts", icon: Car },
-  { name: "Business & Industry", slug: "farming-supplies", icon: Briefcase },
-  { name: "Other Categories", slug: "computers", icon: Grid3X3 },
-];
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  phones: Smartphone,
+  computers: Laptop,
+  electronics: Cpu,
+  fashion: Shirt,
+  "home-appliances": Home,
+  "car-parts": Car,
+  "farming-supplies": Sprout,
+  groceries: ShoppingBasket,
+  furniture: Armchair,
+};
 
 export function CategorySidebar() {
   const [expanded, setExpanded] = useState(false);
+  const pathname = usePathname();
+  const pathSegments = pathname.startsWith("/category/")
+    ? pathname.slice("/category/".length).split("/").filter(Boolean)
+    : [];
+  const activeSlug = resolveCategorySlug(pathSegments);
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside className="hidden w-[220px] shrink-0 lg:block">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-100 px-4 py-3">
-            <h2 className="text-sm font-bold text-gray-900">Shop by category</h2>
+            <Link href="/category" className="text-sm font-bold text-gray-900 hover:text-brand-600">
+              Shop by category
+            </Link>
           </div>
           <nav className="category-scroll max-h-[520px] overflow-y-auto py-1">
-            {SIDEBAR_CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
+            {CATEGORIES.map((cat) => {
+              const Icon = CATEGORY_ICONS[cat.slug] ?? ShoppingBasket;
+              const active = activeSlug === cat.slug;
               return (
                 <Link
-                  key={cat.name}
+                  key={cat.slug}
                   href={`/category/${cat.slug}`}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700"
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700",
+                    active ? "bg-brand-50 font-semibold text-brand-700" : "text-gray-700"
+                  )}
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-brand-600">
                     <Icon className="h-3.5 w-3.5" />
@@ -62,7 +73,6 @@ export function CategorySidebar() {
         </div>
       </aside>
 
-      {/* Mobile category toggle */}
       <div className="mb-4 lg:hidden">
         <button
           onClick={() => setExpanded(!expanded)}
@@ -77,7 +87,10 @@ export function CategorySidebar() {
               <Link
                 key={cat.slug}
                 href={`/category/${cat.slug}`}
-                className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50"
+                className={cn(
+                  "block px-4 py-2.5 text-sm hover:bg-brand-50",
+                  activeSlug === cat.slug ? "font-semibold text-brand-700" : "text-gray-700"
+                )}
                 onClick={() => setExpanded(false)}
               >
                 {cat.name}
