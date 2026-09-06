@@ -21,7 +21,7 @@ export function getAuthPublicUrl() {
   return process.env.NEXTAUTH_URL || process.env.AUTH_URL || "";
 }
 
-export function useSecureAuthCookies() {
+export function shouldUseSecureAuthCookies() {
   if (process.env.NODE_ENV === "production") return true;
   return getAuthPublicUrl().startsWith("https://");
 }

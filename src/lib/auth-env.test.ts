@@ -1,6 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { canonicalZimhubHost, cookieDomainForAuthUrl } from "./auth-env";
+import {
+  canonicalZimhubHost,
+  cookieDomainForAuthUrl,
+  shouldUseSecureAuthCookies,
+} from "./auth-env";
 
 describe("cookieDomainForAuthUrl", () => {
   it("shares cookies across zimhub apex and www", () => {
@@ -18,6 +22,49 @@ describe("cookieDomainForAuthUrl", () => {
       cookieDomainForAuthUrl("https://www.zimhub.co.zw", ".example.com"),
       ".example.com"
     );
+  });
+});
+
+describe("shouldUseSecureAuthCookies", () => {
+  function withEnv(
+    env: { NODE_ENV?: string; NEXTAUTH_URL?: string; AUTH_URL?: string },
+    fn: () => void
+  ) {
+    const keys = ["NODE_ENV", "NEXTAUTH_URL", "AUTH_URL"] as const;
+    const prev: Record<(typeof keys)[number], string | undefined> = {
+      NODE_ENV: process.env.NODE_ENV,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+      AUTH_URL: process.env.AUTH_URL,
+    };
+    try {
+      for (const key of keys) {
+        const value = env[key];
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+      fn();
+    } finally {
+      for (const key of keys) {
+        const value = prev[key];
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  }
+
+  it("forces secure cookies in production", () => {
+    withEnv({ NODE_ENV: "production", NEXTAUTH_URL: "http://localhost:3000" }, () => {
+      assert.equal(shouldUseSecureAuthCookies(), true);
+    });
+  });
+
+  it("uses HTTPS public URL outside production", () => {
+    withEnv({ NODE_ENV: "development", NEXTAUTH_URL: "https://www.zimhub.co.zw" }, () => {
+      assert.equal(shouldUseSecureAuthCookies(), true);
+    });
+    withEnv({ NODE_ENV: "development", NEXTAUTH_URL: "http://localhost:3000" }, () => {
+      assert.equal(shouldUseSecureAuthCookies(), false);
+    });
   });
 });
 

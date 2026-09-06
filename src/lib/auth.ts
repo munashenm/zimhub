@@ -6,12 +6,12 @@ import {
   ensureAuthEnv,
   getAuthCookieDomain,
   getAuthSecret,
-  useSecureAuthCookies,
+  shouldUseSecureAuthCookies,
 } from "./auth-env";
 
 ensureAuthEnv();
 
-const useSecureCookies = useSecureAuthCookies();
+const useSecureCookies = shouldUseSecureAuthCookies();
 const cookieDomain = getAuthCookieDomain();
 
 export const authOptions: NextAuthOptions = {
