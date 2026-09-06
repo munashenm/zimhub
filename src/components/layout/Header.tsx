@@ -102,6 +102,7 @@ export function Header() {
                 <button
                   type="submit"
                   className="flex items-center justify-center bg-brand-500 px-5 text-white hover:bg-brand-600"
+                  aria-label="Search"
                 >
                   <Search className="h-5 w-5" />
                 </button>
@@ -195,7 +196,7 @@ export function Header() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="min-w-0 flex-1 px-4 py-2.5 text-sm"
               />
-              <button type="submit" className="bg-brand-500 px-4 text-white">
+              <button type="submit" className="bg-brand-500 px-4 text-white" aria-label="Search">
                 <Search className="h-5 w-5" />
               </button>
             </div>

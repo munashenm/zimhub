@@ -120,7 +120,7 @@ function RegisterForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form id="register-form" onSubmit={handleSubmit} className="mt-6 space-y-4">
             {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
             )}
