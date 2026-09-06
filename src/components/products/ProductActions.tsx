@@ -9,16 +9,19 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { formatPrice } from "@/lib/utils";
 import { ShoppingCart, Tag, Zap } from "lucide-react";
+import { useCart } from "@/components/cart/CartProvider";
 
 interface ProductActionsProps {
   productId: string;
+  productSlug: string;
   price: number;
   sellerId: string;
 }
 
-export function ProductActions({ productId, price, sellerId }: ProductActionsProps) {
+export function ProductActions({ productId, productSlug, price, sellerId }: ProductActionsProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { refresh } = useCart();
   const [showOffer, setShowOffer] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
   const [offerMessage, setOfferMessage] = useState("");
@@ -29,7 +32,7 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
 
   const handleAddToCart = async () => {
     if (!session) {
-      router.push(`/login?callbackUrl=/product/${productId}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/product/${productSlug}`)}`);
       return;
     }
     setLoading(true);
@@ -41,13 +44,16 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
     setLoading(false);
     if (res.ok) {
       setMessage("Added to cart!");
+      await refresh();
       router.push("/cart");
     }
   };
 
   const handleBuyNow = () => {
     if (!session) {
-      router.push(`/login?callbackUrl=/checkout?product=${productId}`);
+      router.push(
+        `/login?callbackUrl=${encodeURIComponent(`/checkout?product=${productId}`)}`
+      );
       return;
     }
     router.push(`/checkout?product=${productId}`);
@@ -56,7 +62,7 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
   const handleOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/product/${productSlug}`)}`);
       return;
     }
     setLoading(true);
@@ -140,7 +146,13 @@ export function ProductActions({ productId, price, sellerId }: ProductActionsPro
 
       {!session && (
         <p className="text-center text-sm text-gray-500">
-          <Link href="/login" className="font-semibold text-brand-600">Sign in</Link> to buy or make an offer
+          <Link
+            href={`/login?callbackUrl=${encodeURIComponent(`/product/${productSlug}`)}`}
+            className="font-semibold text-brand-600"
+          >
+            Sign in
+          </Link>{" "}
+          to buy or make an offer
         </p>
       )}
     </div>

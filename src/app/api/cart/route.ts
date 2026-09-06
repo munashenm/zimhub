@@ -48,13 +48,21 @@ export async function POST(request: Request) {
     if (!product || product.status !== "APPROVED") {
       return NextResponse.json({ error: "Product not available" }, { status: 400 });
     }
+    if (product.stock < 1) {
+      return NextResponse.json({ error: "Out of stock" }, { status: 400 });
+    }
+
+    const existing = await prisma.cartItem.findUnique({
+      where: { userId_productId: { userId: session.user.id, productId } },
+    });
+    const nextQuantity = Math.min((existing?.quantity ?? 0) + quantity, product.stock);
 
     const item = await prisma.cartItem.upsert({
       where: {
         userId_productId: { userId: session.user.id, productId },
       },
-      update: { quantity: { increment: quantity } },
-      create: { userId: session.user.id, productId, quantity },
+      update: { quantity: nextQuantity },
+      create: { userId: session.user.id, productId, quantity: nextQuantity },
       include: { product: true },
     });
 
@@ -85,4 +93,54 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json({ message: "Cart updated" });
+}
+
+const updateSchema = z.object({
+  productId: z.string(),
+  quantity: z.number().int().min(0),
+});
+
+export async function PATCH(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { productId, quantity } = updateSchema.parse(body);
+
+    if (quantity === 0) {
+      await prisma.cartItem.deleteMany({
+        where: { userId: session.user.id, productId },
+      });
+      return NextResponse.json({ message: "Removed" });
+    }
+
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product || product.status !== "APPROVED") {
+      return NextResponse.json({ error: "Product not available" }, { status: 400 });
+    }
+
+    const nextQuantity = Math.min(quantity, product.stock);
+    if (nextQuantity < 1) {
+      await prisma.cartItem.deleteMany({
+        where: { userId: session.user.id, productId },
+      });
+      return NextResponse.json({ message: "Removed" });
+    }
+
+    const item = await prisma.cartItem.update({
+      where: { userId_productId: { userId: session.user.id, productId } },
+      data: { quantity: nextQuantity },
+      include: { product: true },
+    });
+
+    return NextResponse.json(item);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to update cart" }, { status: 500 });
+  }
 }

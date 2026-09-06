@@ -13,7 +13,7 @@ export function TopBar() {
             Sell on ZimHub
           </Link>
           <Link href="/search" className="hidden hover:text-brand-400 md:inline">
-            Stores
+            All listings
           </Link>
         </div>
         <div className="flex items-center gap-4">

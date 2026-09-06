@@ -7,7 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, parseImages } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
-import { Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
+import { useCart } from "@/components/cart/CartProvider";
 
 interface CartItem {
   id: string;
@@ -19,14 +20,17 @@ interface CartItem {
     price: number;
     currency: string;
     images: unknown;
+    stock: number;
   };
 }
 
 export default function CartPage() {
   const { status } = useSession();
   const router = useRouter();
+  const { refresh } = useCart();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -36,14 +40,46 @@ export default function CartPage() {
     if (status === "authenticated") {
       fetch("/api/cart")
         .then((r) => r.json())
-        .then(setItems)
+        .then((data) => {
+          if (Array.isArray(data)) setItems(data);
+        })
         .finally(() => setLoading(false));
     }
   }, [status, router]);
 
   const removeItem = async (productId: string) => {
+    setUpdatingId(productId);
     await fetch(`/api/cart?productId=${productId}`, { method: "DELETE" });
-    setItems(items.filter((i) => i.product.id !== productId));
+    setItems((prev) => prev.filter((i) => i.product.id !== productId));
+    await refresh();
+    setUpdatingId(null);
+  };
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    setUpdatingId(productId);
+    if (quantity < 1) {
+      await removeItem(productId);
+      return;
+    }
+
+    const res = await fetch("/api/cart", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, quantity }),
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      if (updated?.product) {
+        setItems((prev) =>
+          prev.map((i) => (i.product.id === productId ? { ...i, quantity: updated.quantity } : i))
+        );
+      } else {
+        setItems((prev) => prev.filter((i) => i.product.id !== productId));
+      }
+      await refresh();
+    }
+    setUpdatingId(null);
   };
 
   const total = items.reduce(
@@ -64,7 +100,7 @@ export default function CartPage() {
       {items.length === 0 ? (
         <div className="mt-12 rounded-xl border border-dashed border-gray-300 py-16 text-center">
           <p className="text-gray-500">Your cart is empty</p>
-          <Link href="/" className="mt-4 inline-block">
+          <Link href="/search" className="mt-4 inline-block">
             <Button>Browse Products</Button>
           </Link>
         </div>
@@ -92,7 +128,29 @@ export default function CartPage() {
                     >
                       {item.product.title}
                     </Link>
-                    <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={updatingId === item.product.id || item.quantity <= 1}
+                        onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-6 text-center text-sm font-medium">{item.quantity}</span>
+                      <button
+                        type="button"
+                        disabled={
+                          updatingId === item.product.id || item.quantity >= item.product.stock
+                        }
+                        onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        className="rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <p className="font-bold text-brand-700">
                     {formatPrice(item.product.price * item.quantity, item.product.currency)}
@@ -100,7 +158,9 @@ export default function CartPage() {
                 </div>
                 <button
                   onClick={() => removeItem(item.product.id)}
-                  className="self-start rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  disabled={updatingId === item.product.id}
+                  className="self-start rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                  aria-label="Remove from cart"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 const TABS = [
-  { label: "Midweek Deals", href: "/search?q=deals", active: true },
-  { label: "Flash Friday", href: "/search?q=flash" },
-  { label: "More promotions", href: "/search", dropdown: true },
+  { label: "All listings", href: "/search", active: true },
+  { label: "Phones", href: "/category/phones" },
+  { label: "Shop categories", href: "/category", dropdown: true },
 ];
 
 export function PromoTabs() {
